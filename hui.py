@@ -52,9 +52,7 @@ WELCOME_PHOTOS = [
 ]
 
 MATERIAL_PHOTOS = {
-    "лдсп": "https://raw.githubusercontent.com/tigran420/dermo/main/photo_2025-10-06_15-58-59%20(2).jpg",
-    "агт": "https://raw.githubusercontent.com/tigran420/dermo/main/photo_2025-10-06_15-58-59.jpg",
-    "эмаль": "https://raw.githubusercontent.com/tigran420/dermo/main/photo_2025-10-06_15-58-59%20(3).jpg",
+    "лдсп": "https://raw.githubusercontent.com/tigran420/eban-/main/3453f3d080c9954d5f59cf5ccbfe8e53.jpg",
 }
 
 
@@ -273,7 +271,7 @@ class KeyboardManager:
                     ]
                 ]
             }
-            return json.dumps(keyboard, ensure_ascii=False)
+            return None
 
     @staticmethod
     def get_kitchen_type_keyboard(platform: Platform):
@@ -596,11 +594,15 @@ class FurnitureBotCore:
             f"📱 **Телефон**\n\n"
             f"Пожалуйста, отправьте ваш номер телефона:"
         )
+
+        # Для VK не передаем клавиатуру, для Telegram передаем
+        keyboard = KeyboardManager.get_phone_keyboard(platform) if platform == Platform.TELEGRAM else None
+
         await self.send_message(
             platform,
             user_id,
             text,
-            KeyboardManager.get_phone_keyboard(platform),
+            keyboard
         )
         self.get_user_data(user_id)["waiting_for"] = "phone"
 
@@ -727,17 +729,13 @@ class FurnitureBotCore:
         elif data.startswith("материал_"):
             if data == "материал_лдсп":
                 user_data_local["material"] = "ЛДСП"
-            elif data == "материал_агт":
-                user_data_local["material"] = "АГТ"
-            elif data == "материал_эмаль":
-                user_data_local["material"] = "Эмаль"
 
             # Отправляем фото выбранного материала
             material_key = data.replace("материал_", "")
             photo_url = MATERIAL_PHOTOS.get(material_key)
             if photo_url:
                 await self.send_photo_album(platform, user_id, [photo_url],
-                                            f"📸 Материал: {user_data_local['material']}")
+                                            f"Подробнее о материалах: {user_data_local['material']}")
 
             user_data_local["current_step"] = "hardware"
             await self.send_message(platform, user_id, "🔧 **Фурнитура**\n\nВыберите класс фурнитуры:",
@@ -843,7 +841,7 @@ class FurnitureBotCore:
         # Затем отправляем все фото материалов отдельными сообщениями
         for material_name, photo_url in MATERIAL_PHOTOS.items():
             material_display_name = material_name.upper()
-            await self.send_photo_album(platform, user_id, [photo_url], f"📸 Материал: {material_display_name}")
+            await self.send_photo_album(platform, user_id, [photo_url], f" 840 строка+-: {material_display_name}")
 
     async def send_or_edit_message(self, platform: Platform, user_id: int, message_id: int, text: str, keyboard=None):
         if message_id and platform == Platform.TELEGRAM:  # Only edit message for Telegram
